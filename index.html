@@ -138,6 +138,20 @@
                 inset 4px 4px 0px 0px #ab47bc;
         }
 
+        .pixel-btn-red {
+            background-color: #c62828;
+            box-shadow: 
+                inset -4px -4px 0px 0px #8e0000,
+                inset 4px 4px 0px 0px #ef5350;
+        }
+
+        .pixel-btn-cyan {
+            background-color: #00838f;
+            box-shadow: 
+                inset -4px -4px 0px 0px #004d40,
+                inset 4px 4px 0px 0px #4dd0e1;
+        }
+
         .pixel-btn-disabled {
             background-color: #555555 !important;
             opacity: 0.6;
@@ -246,6 +260,9 @@
             <span class="flex items-center gap-1">💎 КРИСТАЛИ:</span>
             <span id="gemsDisplay" class="text-white">0</span>
         </div>
+        <!-- Active Potions Status Bar -->
+        <div id="activePotionsBar" class="text-[8px] flex flex-wrap gap-1 text-yellow-300"></div>
+
         <div class="flex justify-between items-center text-[8px] text-gray-400 border-t border-gray-800 pt-1">
             <span>ГРАВЕЦЬ: <span id="playerNickDisplay" class="text-yellow-300">-</span></span>
             <span id="saveStatusText" class="text-green-400"></span>
@@ -258,19 +275,24 @@
         </div>
     </header>
 
-    <!-- NAVIGATION MENU BUTTONS -->
-    <nav class="w-full max-w-md grid grid-cols-4 gap-1 my-2 z-10">
-        <button onclick="openModal('shopModal')" class="pixel-btn pixel-btn-green py-2 text-[9px] text-white text-center">
+    <!-- NAVIGATION MENU BUTTONS (ЗВЕРХУ 3, ЗНИЗУ 2) -->
+    <nav class="w-full max-w-md grid grid-cols-3 gap-1 my-1 z-10">
+        <button onclick="openModal('shopModal')" class="pixel-btn pixel-btn-green py-2 text-[8px] text-white text-center">
             🛒 МАГАЗИН
         </button>
-        <button onclick="openModal('backgroundsModal')" class="pixel-btn pixel-btn-blue py-2 text-[9px] text-white text-center">
+        <button onclick="openModal('petsModal')" class="pixel-btn pixel-btn-cyan py-2 text-[8px] text-white text-center">
+            🐾 ПИТОМЦІ
+        </button>
+        <button onclick="openModal('potionsModal')" class="pixel-btn pixel-btn-red py-2 text-[8px] text-white text-center">
+            🧪 ЗІЛЛЯ
+        </button>
+    </nav>
+    <nav class="w-full max-w-md grid grid-cols-2 gap-1 mb-2 z-10">
+        <button onclick="openModal('backgroundsModal')" class="pixel-btn pixel-btn-blue py-2 text-[8px] text-white text-center">
             🎨 ФОНИ
         </button>
-        <button onclick="openModal('promoModal')" class="pixel-btn pixel-btn-gold py-2 text-[9px] text-white text-center">
-            🎁 КОД
-        </button>
-        <button onclick="openLeaderboardModal()" class="pixel-btn pixel-btn-purple py-2 text-[9px] text-white text-center">
-            🏆 ТОП
+        <button onclick="openModal('promoModal')" class="pixel-btn pixel-btn-gold py-2 text-[8px] text-white text-center">
+            🎁 КОД / ТОП
         </button>
     </nav>
 
@@ -288,9 +310,11 @@
             </div>
         </div>
 
-        <!-- Interactive Canvas Pixel Block -->
+        <!-- Interactive Canvas Pixel Block + Pet Display Overlay -->
         <div class="relative flex items-center justify-center" id="canvasContainer">
             <canvas id="blockCanvas" width="16" height="16" class="w-48 h-48 sm:w-56 sm:h-56"></canvas>
+            <!-- Накладений активний питомец -->
+            <div id="activePetOverlay" class="absolute -top-6 right-2 text-2xl hidden pointer-events-none drop-shadow-[0_2px_4px_rgba(0,0,0,1)]"></div>
         </div>
 
         <!-- DPS & Click Stats -->
@@ -311,6 +335,106 @@
         <div class="text-[10px] text-gray-300">БЛОКУВАННЯ НА: <span id="banTimer" class="text-white font-bold">10</span> сек</div>
     </div>
 
+    <!-- PETS MODAL -->
+    <div id="petsModal" class="hidden fixed inset-0 modal-overlay z-40 flex items-center justify-center p-3">
+        <div class="bg-gray-900 border-4 border-black w-full max-w-md p-4 rounded pixel-border flex flex-col max-h-[85vh]">
+            <div class="flex justify-between items-center mb-3 pb-2 border-b-2 border-gray-700">
+                <h2 class="text-xs text-cyan-400">🐾 МАГАЗИН ПИТОМЦІВ</h2>
+                <button onclick="closeModal('petsModal')" class="text-red-400 text-sm font-bold px-2">X</button>
+            </div>
+            <div class="text-[8px] text-gray-400 mb-2 text-center">Можна мати по 1 кожного виду. Екіпірувати можна лише 1!</div>
+            
+            <div class="space-y-3 overflow-y-auto retro-scroll pr-1 flex-1 text-[9px]">
+                
+                <!-- Rabbit -->
+                <div class="bg-gray-800 p-2 border-2 border-black flex justify-between items-center">
+                    <div class="space-y-1">
+                        <div class="text-yellow-300 font-bold">🐇 Заєць</div>
+                        <div class="text-gray-400">Бонус: x1.5 урон за клік</div>
+                        <div class="text-cyan-300">Ціна: 100 💎</div>
+                    </div>
+                    <div id="rabbitActionContainer">
+                        <button id="btnBuyRabbit" onclick="buyPet('rabbit')" class="pixel-btn pixel-btn-gold px-2 py-1 text-white text-[8px]">КУПИТИ</button>
+                    </div>
+                </div>
+
+                <!-- Wolf -->
+                <div class="bg-gray-800 p-2 border-2 border-black flex justify-between items-center">
+                    <div class="space-y-1">
+                        <div class="text-yellow-300 font-bold">🐺 Вовк</div>
+                        <div class="text-gray-400">Бонус: x2 гроші з блоку</div>
+                        <div class="text-cyan-300">Ціна: 250 💎</div>
+                    </div>
+                    <div id="wolfActionContainer">
+                        <button id="btnBuyWolf" onclick="buyPet('wolf')" class="pixel-btn pixel-btn-gold px-2 py-1 text-white text-[8px]">КУПИТИ</button>
+                    </div>
+                </div>
+
+                <!-- Bird -->
+                <div class="bg-gray-800 p-2 border-2 border-black flex justify-between items-center">
+                    <div class="space-y-1">
+                        <div class="text-yellow-300 font-bold">🐦 Чик-чирик</div>
+                        <div class="text-gray-400">Бонус: x2 урон міньйонів</div>
+                        <div class="text-cyan-300">Ціна: 500 💎</div>
+                    </div>
+                    <div id="birdActionContainer">
+                        <button id="btnBuyBird" onclick="buyPet('bird')" class="pixel-btn pixel-btn-gold px-2 py-1 text-white text-[8px]">КУПИТИ</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- POTIONS & INVENTORY MODAL -->
+    <div id="potionsModal" class="hidden fixed inset-0 modal-overlay z-40 flex items-center justify-center p-3">
+        <div class="bg-gray-900 border-4 border-black w-full max-w-md p-4 rounded pixel-border flex flex-col max-h-[85vh]">
+            <div class="flex justify-between items-center mb-3 pb-2 border-b-2 border-gray-700">
+                <h2 class="text-xs text-red-400">🧪 ІНВЕНТАР ЗІЛЬ</h2>
+                <button onclick="closeModal('potionsModal')" class="text-red-400 text-sm font-bold px-2">X</button>
+            </div>
+            <div class="space-y-3 overflow-y-auto retro-scroll pr-1 flex-1 text-[9px]">
+                
+                <div class="bg-gray-800 p-2 border-2 border-black flex justify-between items-center">
+                    <div class="space-y-1">
+                        <div class="text-red-400 font-bold">⚔️ Зілля Сили (5 хв)</div>
+                        <div class="text-gray-300">Дає x2 Урон за клік</div>
+                        <div class="text-yellow-400">В наявності: <span id="potStrengthCount">0</span> шт.</div>
+                        <div id="potStrengthTimer" class="text-green-400 text-[8px]"></div>
+                    </div>
+                    <button id="btnUseStrength" onclick="usePotion('strength')" class="pixel-btn pixel-btn-red px-2 py-2 text-white text-[8px]">
+                        ПИТИ
+                    </button>
+                </div>
+
+                <div class="bg-gray-800 p-2 border-2 border-black flex justify-between items-center">
+                    <div class="space-y-1">
+                        <div class="text-yellow-400 font-bold">🪙 Зілля Багатства (5 хв)</div>
+                        <div class="text-gray-300">Дає x2 Гроші з блоку</div>
+                        <div class="text-yellow-400">В наявності: <span id="potWealthCount">0</span> шт.</div>
+                        <div id="potWealthTimer" class="text-green-400 text-[8px]"></div>
+                    </div>
+                    <button id="btnUseWealth" onclick="usePotion('wealth')" class="pixel-btn pixel-btn-gold px-2 py-2 text-white text-[8px]">
+                        ПИТИ
+                    </button>
+                </div>
+
+                <div class="bg-gray-800 p-2 border-2 border-black flex justify-between items-center">
+                    <div class="space-y-1">
+                        <div class="text-purple-400 font-bold">🤖 Зілля Міньйонів (5 хв)</div>
+                        <div class="text-gray-300">Дає x2 Авто-урон (DPS)</div>
+                        <div class="text-yellow-400">В наявності: <span id="potMinionsCount">0</span> шт.</div>
+                        <div id="potMinionsTimer" class="text-green-400 text-[8px]"></div>
+                    </div>
+                    <button id="btnUseMinions" onclick="usePotion('minions')" class="pixel-btn pixel-btn-purple px-2 py-2 text-white text-[8px]">
+                        ПИТИ
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
     <!-- LEADERBOARD MODAL -->
     <div id="leaderboardModal" class="hidden fixed inset-0 modal-overlay z-40 flex items-center justify-center p-3">
         <div class="bg-gray-900 border-4 border-black w-full max-w-md p-4 rounded pixel-border flex flex-col max-h-[85vh]">
@@ -319,9 +443,7 @@
                 <button onclick="closeModal('leaderboardModal')" class="text-red-400 text-sm font-bold px-2">X</button>
             </div>
             <div class="text-[8px] text-gray-400 mb-2 text-center leading-relaxed" id="leaderboardMode">Гравці та їхні пристрої:</div>
-            <div class="space-y-2 overflow-y-auto retro-scroll pr-1 flex-1 text-[9px]" id="leaderboardList">
-                <!-- Dynamically filled -->
-            </div>
+            <div class="space-y-2 overflow-y-auto retro-scroll pr-1 flex-1 text-[9px]" id="leaderboardList"></div>
         </div>
     </div>
 
@@ -336,7 +458,6 @@
             
             <div class="space-y-3 overflow-y-auto retro-scroll pr-1 flex-1 text-[9px]">
                 
-                <!-- Wooden Shovel -->
                 <div class="bg-gray-800 p-2 border-2 border-black flex justify-between items-center">
                     <div class="space-y-1">
                         <div class="text-yellow-300 font-bold">🪵 Дерев'яна лопата</div>
@@ -348,7 +469,6 @@
                     </button>
                 </div>
 
-                <!-- Heavy Block -->
                 <div class="bg-gray-800 p-2 border-2 border-black flex justify-between items-center">
                     <div class="space-y-1">
                         <div class="text-yellow-300 font-bold">🪨 Важкий блок</div>
@@ -360,7 +480,6 @@
                     </button>
                 </div>
 
-                <!-- Miner -->
                 <div class="bg-gray-800 p-2 border-2 border-black flex justify-between items-center">
                     <div class="space-y-1">
                         <div class="text-yellow-300 font-bold">⛏️ Viva-noob Шахтар</div>
@@ -372,12 +491,11 @@
                     </button>
                 </div>
 
-                <!-- Silver Pickaxe -->
                 <div id="silverPickaxeRow" class="bg-gray-800 p-2 border-2 border-black flex justify-between items-center opacity-50">
                     <div class="space-y-1">
                         <div class="text-yellow-300 font-bold">⛏️ Срібна кірка</div>
                         <div class="text-gray-400">+5 Урон за клік</div>
-                        <div class="text-gray-400">Рівень: <span id="silverLvlText">0</span>/5</div>
+                        <div class="text-gray-400">Рівень: <span id="silverLvlText">0</span>/10</div>
                         <div id="silverPickaxeStatus" class="text-red-400 text-[8px]">Потрібен Важкий Блок Рв. 5+</div>
                     </div>
                     <button id="btnBuySilver" onclick="buySilverPickaxe()" class="pixel-btn pixel-btn-disabled px-2 py-2 text-white text-[8px]">
@@ -385,7 +503,6 @@
                     </button>
                 </div>
 
-                <!-- Businessman -->
                 <div id="businessmanRow" class="bg-gray-800 p-2 border-2 border-black flex justify-between items-center opacity-50">
                     <div class="space-y-1">
                         <div class="text-yellow-300 font-bold">💼 Бізнесмен</div>
@@ -398,7 +515,6 @@
                     </button>
                 </div>
 
-                <!-- Cool Miner -->
                 <div id="coolMinerRow" class="bg-gray-800 p-2 border-2 border-black flex justify-between items-center opacity-50">
                     <div class="space-y-1">
                         <div class="text-yellow-300 font-bold">😎 Крутий шахтар</div>
@@ -411,7 +527,6 @@
                     </button>
                 </div>
 
-                <!-- Iron Pickaxe -->
                 <div id="ironPickaxeRow" class="bg-gray-800 p-2 border-2 border-black flex justify-between items-center opacity-50">
                     <div class="space-y-1">
                         <div class="text-yellow-300 font-bold">⛏️ Залізна кірка</div>
@@ -424,7 +539,6 @@
                     </button>
                 </div>
 
-                <!-- Iron Miner -->
                 <div id="ironMinerRow" class="bg-gray-800 p-2 border-2 border-black flex justify-between items-center opacity-50">
                     <div class="space-y-1">
                         <div class="text-yellow-300 font-bold">🤖 Залізний шахтар</div>
@@ -437,7 +551,6 @@
                     </button>
                 </div>
 
-                <!-- Bitcoin -->
                 <div id="bitcoinRow" class="bg-gray-800 p-2 border-2 border-black flex justify-between items-center opacity-50">
                     <div class="space-y-1">
                         <div class="text-yellow-300 font-bold">🪙 Біткоїн</div>
@@ -450,7 +563,18 @@
                     </button>
                 </div>
 
-                <!-- Gold Pickaxe -->
+                <div id="apartmentRow" class="bg-gray-800 p-2 border-2 border-black flex justify-between items-center opacity-50">
+                    <div class="space-y-1">
+                        <div class="text-yellow-300 font-bold">🏢 Квартира</div>
+                        <div class="text-gray-400">+250 Монет / сек</div>
+                        <div class="text-gray-400">Рівень: <span id="apartmentLvlText">0</span>/3</div>
+                        <div id="apartmentStatus" class="text-red-400 text-[8px]">Потрібен Важкий Блок Рв. 10+</div>
+                    </div>
+                    <button id="btnBuyApartment" onclick="buyApartment()" class="pixel-btn pixel-btn-disabled px-2 py-2 text-white text-[8px]">
+                        <span id="apartmentCostText">10,000 🪙</span>
+                    </button>
+                </div>
+
                 <div id="goldPickaxeRow" class="bg-gray-800 p-2 border-2 border-black flex justify-between items-center opacity-50">
                     <div class="space-y-1">
                         <div class="text-yellow-300 font-bold">🌟 Золота кірка</div>
@@ -460,6 +584,18 @@
                     </div>
                     <button id="btnBuyGoldPickaxe" onclick="buyGoldPickaxe()" class="pixel-btn pixel-btn-disabled px-2 py-2 text-white text-[8px]">
                         <span id="goldPickaxeCostText">5,000 🪙</span>
+                    </button>
+                </div>
+
+                <div id="goldMinerRow" class="bg-gray-800 p-2 border-2 border-black flex justify-between items-center opacity-50">
+                    <div class="space-y-1">
+                        <div class="text-yellow-300 font-bold">✨ Золотий шахтар</div>
+                        <div class="text-gray-400">+400 Авто-урон / сек</div>
+                        <div class="text-gray-400">Рівень: <span id="goldMinerLvlText">0</span>/3</div>
+                        <div id="goldMinerStatus" class="text-red-400 text-[8px]">Потрібен Важкий Блок Рв. 15+</div>
+                    </div>
+                    <button id="btnBuyGoldMiner" onclick="buyGoldMiner()" class="pixel-btn pixel-btn-disabled px-2 py-2 text-white text-[8px]">
+                        <span id="goldMinerCostText">5,000 🪙</span>
                     </button>
                 </div>
 
@@ -474,18 +610,15 @@
                 <h2 class="text-xs text-cyan-400">🎨 МАГАЗИН ФОНІВ</h2>
                 <button onclick="closeModal('backgroundsModal')" class="text-red-400 text-sm font-bold px-2">X</button>
             </div>
-
-            <div class="space-y-2 overflow-y-auto retro-scroll pr-1 flex-1 text-[9px]" id="backgroundsList">
-                <!-- Dynamically generated backgrounds -->
-            </div>
+            <div class="space-y-2 overflow-y-auto retro-scroll pr-1 flex-1 text-[9px]" id="backgroundsList"></div>
         </div>
     </div>
 
-    <!-- PROMOCODE MODAL -->
+    <!-- PROMOCODE & LEADERBOARD MODAL -->
     <div id="promoModal" class="hidden fixed inset-0 modal-overlay z-40 flex items-center justify-center p-3">
         <div class="bg-gray-900 border-4 border-black w-full max-w-md p-4 rounded pixel-border flex flex-col">
             <div class="flex justify-between items-center mb-3 pb-2 border-b-2 border-gray-700">
-                <h2 class="text-xs text-yellow-400">🎁 ВВЕДЕННЯ ПРОМОКОДУ</h2>
+                <h2 class="text-xs text-yellow-400">🎁 ПРОМОКОД ТА ТОП</h2>
                 <button onclick="closeModal('promoModal')" class="text-red-400 text-sm font-bold px-2">X</button>
             </div>
 
@@ -495,12 +628,15 @@
                     <input type="text" id="promoInput" placeholder="Код сюди..." 
                         class="w-full bg-black border-2 border-gray-600 p-2 text-white uppercase text-[10px] focus:outline-none focus:border-yellow-400">
                 </div>
-                
                 <div id="promoMessage" class="text-center min-h-[16px] text-[8px]"></div>
-
                 <button onclick="applyPromoCode()" class="pixel-btn pixel-btn-gold w-full py-3 text-white text-[10px]">
                     ЗАСТОСУВАТИ
                 </button>
+                <div class="pt-2">
+                    <button onclick="openLeaderboardModal(); closeModal('promoModal');" class="pixel-btn pixel-btn-purple w-full py-2 text-white text-[9px]">
+                        🏆 ВІДКРИТИ ТАБЛИЦЮ ЛІДЕРІВ
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -528,6 +664,25 @@
                     <input type="number" id="adminGems" min="0" placeholder="0"
                         class="w-full bg-black border-2 border-gray-600 p-2 text-white text-[10px] focus:outline-none focus:border-yellow-400">
                 </div>
+
+                <div class="pt-2 border-t border-gray-800 space-y-2">
+                    <div class="text-yellow-400 font-bold">🧪 ВИДАТИ ЗІЛЛЯ (шт):</div>
+                    <div class="grid grid-cols-3 gap-1">
+                        <div>
+                            <label class="text-[7px] text-red-300 block">⚔️ Сила</label>
+                            <input type="number" id="adminPotStrength" min="0" placeholder="0" class="w-full bg-black border border-gray-600 p-1 text-white text-[9px]">
+                        </div>
+                        <div>
+                            <label class="text-[7px] text-yellow-300 block">🪙 Багатство</label>
+                            <input type="number" id="adminPotWealth" min="0" placeholder="0" class="w-full bg-black border border-gray-600 p-1 text-white text-[9px]">
+                        </div>
+                        <div>
+                            <label class="text-[7px] text-purple-300 block">🤖 Міньйони</label>
+                            <input type="number" id="adminPotMinions" min="0" placeholder="0" class="w-full bg-black border border-gray-600 p-1 text-white text-[9px]">
+                        </div>
+                    </div>
+                </div>
+
                 <div id="adminMsg" class="text-center min-h-[16px] text-[8px]"></div>
                 <button onclick="adminGive()" class="pixel-btn pixel-btn-gold w-full py-3 text-white text-[10px]">
                     ВИДАТИ
@@ -538,8 +693,9 @@
                     <div class="grid grid-cols-2 gap-2">
                         <button onclick="adminReset('coins')" class="pixel-btn px-2 py-2 text-white text-[8px]">🪙 МОНЕТИ</button>
                         <button onclick="adminReset('gems')" class="pixel-btn px-2 py-2 text-white text-[8px]">💎 КРИСТАЛИ</button>
+                        <button onclick="adminReset('potions')" class="pixel-btn px-2 py-2 text-white text-[8px]">🧪 ЗІЛЛЯ</button>
                         <button onclick="adminReset('ban')" class="pixel-btn px-2 py-2 text-white text-[8px]">🚫 БАН</button>
-                        <button onclick="adminReset('all')" class="pixel-btn px-2 py-2 text-red-300 text-[8px]">☠ ВЕСЬ ПРОГРЕС</button>
+                        <button onclick="adminReset('all')" class="pixel-btn px-2 py-2 text-red-300 text-[8px] col-span-2">☠ ВЕСЬ ПРОГРЕС</button>
                     </div>
                 </div>
             </div>
@@ -548,27 +704,12 @@
 
     <!-- GAME LOGIC AND AUDIO ENGINE -->
     <script>
-        /* =====================================================================
-           ХМАРНА ТАБЛИЦЯ ЛІДЕРІВ (щоб гравці з РІЗНИХ пристроїв бачили один одного)
-
-           localStorage працює тільки в межах одного браузера на одному пристрої,
-           тому без сервера два акаунти на різних пристроях ніколи не побачать
-           одне одного. Щоб це працювало, встав сюди адресу своєї Firebase
-           Realtime Database, наприклад:
-             'https://my-viva-default-rtdb.europe-west1.firebasedatabase.app'
-           Якщо залишити порожнім — гра працює як раніше, тільки локально.
-           ===================================================================== */
         const CLOUD_URL = 'https://ghdj-42e61-default-rtdb.europe-west1.firebasedatabase.app';
-
-        // Адмін: цей нік бачить кнопку «АДМІН» і може видавати монети та кристали.
-        // УВАГА: перевірка на стороні клієнта. Зареєструй цей нік першим і задай пароль,
-        // інакше його може зайняти хтось інший.
         const ADMIN_NICK = 'Viva2840';
 
         const $ = (id) => document.getElementById(id);
         const cloudOn = () => !!CLOUD_URL;
 
-        // Ключ у базі: нік у hex (Firebase не любить крапки, # $ [ ] / у ключах)
         function nickKey(nick) {
             return Array.from(new TextEncoder().encode(nick.toLowerCase()))
                 .map(b => b.toString(16).padStart(2, '0')).join('');
@@ -577,7 +718,7 @@
         async function cloudGet(path) {
             const r = await fetch(`${CLOUD_URL.replace(/\/$/, '')}/${path}.json`);
             if (!r.ok) throw new Error('cloud get ' + r.status);
-            return r.json(); // null, якщо нічого немає
+            return r.json();
         }
 
         async function cloudPut(path, data) {
@@ -589,7 +730,6 @@
             if (!r.ok) throw new Error('cloud put ' + r.status);
         }
 
-        // Простий хеш пароля (щоб у базі не лежав пароль відкритим текстом)
         function hashPass(nick, pass) {
             const str = nick.toLowerCase() + '::' + pass;
             let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
@@ -607,10 +747,8 @@
             return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
         }
 
-        /* --- GAME STATE & DEVICE DETECTION --- */
         const DEVICE_NAME = /Mobi|Android|iPhone/i.test(navigator.userAgent) ? "Мобільний (Oppo/Смартфон)" : "Комп'ютер / ПК";
 
-        // Усе, що зберігається в збереженні
         const DEFAULT_SAVE = () => ({
             coins: 0,
             gems: 0,
@@ -624,14 +762,21 @@
             ironPickaxeLevel: 0,
             ironMinerLevel: 0,
             bitcoinLevel: 0,
+            apartmentLevel: 0,
             goldPickaxeLevel: 0,
+            goldMinerLevel: 0,
             maxHp: 5,
             currentHp: 5,
             currentBg: 'black',
             unlockedBgs: ['black'],
             usedPromos: [],
             banCount: 0,
-            banUntil: 0
+            banUntil: 0,
+            potions: { strength: 0, wealth: 0, minions: 0 },
+            potionTimers: { strength: 0, wealth: 0, minions: 0 },
+            // Pets data
+            petsOwned: { rabbit: false, wolf: false, bird: false },
+            equippedPet: null
         });
 
         let state = Object.assign({
@@ -646,7 +791,6 @@
             banTimerSec: 0
         }, DEFAULT_SAVE());
 
-        /* --- BACKGROUND DEFINITIONS --- */
         const BACKGROUNDS = [
             { id: 'black', name: '⚫ Чорний', price: 0, class: 'bg-black-theme' },
             { id: 'white', name: '⚪ Білий', price: 1, color: '#f5f5f5' },
@@ -671,7 +815,6 @@
             { id: 'neon', name: '⚡ Неон', price: 30, class: 'bg-neon-theme' }
         ];
 
-        /* --- PROMO CODES DEFINITIONS --- */
         const PROMO_CODES = {
             'привітВіва': { coins: 500, gems: 0 },
             'прип': { coins: 0, gems: 100 },
@@ -679,7 +822,12 @@
             'йцукен': { coins: 1000000, gems: 0 }
         };
 
-        /* --- SAVE HELPERS --- */
+        const PET_CONFIG = {
+            rabbit: { name: '🐇 Заєць', price: 100, emoji: '🐇' },
+            wolf: { name: '🐺 Вовк', price: 250, emoji: '🐺' },
+            bird: { name: '🐦 Чик-чирик', price: 500, emoji: '🐦' }
+        };
+
         function collectSave() {
             const out = {};
             Object.keys(DEFAULT_SAVE()).forEach(k => { out[k] = state[k]; });
@@ -692,7 +840,9 @@
             Object.keys(DEFAULT_SAVE()).forEach(k => {
                 if (data[k] !== undefined && data[k] !== null) state[k] = data[k];
             });
-            // Firebase може повертати порожні масиви як null/undefined
+            if (!state.potions) state.potions = { strength: 0, wealth: 0, minions: 0 };
+            if (!state.potionTimers) state.potionTimers = { strength: 0, wealth: 0, minions: 0 };
+            if (!state.petsOwned) state.petsOwned = { rabbit: false, wolf: false, bird: false };
             if (!Array.isArray(state.usedPromos)) state.usedPromos = [];
             if (!Array.isArray(state.unlockedBgs) || !state.unlockedBgs.includes('black')) {
                 state.unlockedBgs = ['black'].concat(Array.isArray(state.unlockedBgs) ? state.unlockedBgs : []);
@@ -709,7 +859,6 @@
             statusTimer = setTimeout(() => { el.textContent = ''; }, 2500);
         }
 
-        /* --- AUTH & SAVE / LOAD SYSTEM --- */
         function checkAuth() {
             const savedUser = localStorage.getItem('vivaclicker_active_user');
             if (!savedUser) {
@@ -736,7 +885,6 @@
 
             try {
                 if (cloudOn()) {
-                    // Акаунти зберігаються в хмарі — один нік = один акаунт на всіх пристроях
                     const hash = hashPass(nick, pass);
                     const acc = await cloudGet(`accounts/${nickKey(nick)}`);
                     if (acc) {
@@ -796,7 +944,6 @@
             if (!state.currentUser || !state.loaded) return;
             const data = collectSave();
             localStorage.setItem(`vivaclicker_save_${state.currentUser}`, JSON.stringify(data));
-
             pushLeaderboard();
 
             if (cloudOn()) {
@@ -835,7 +982,6 @@
             if (best) applySave(best);
             state.loaded = true;
 
-            // Якщо бан ще діє (перезавантажив сторінку або перезайшов), продовжуємо його
             if (state.banUntil > Date.now()) startBanCountdown();
 
             selectBackground(state.currentBg);
@@ -844,7 +990,6 @@
             claimGifts();
         }
 
-        /* --- ADMIN: видача монет і кристалів --- */
         function adminMessage(text, ok) {
             const el = $('adminMsg');
             el.textContent = text;
@@ -858,24 +1003,34 @@
             const coins = Math.min(MAX, Math.max(0, Math.floor(Number($('adminCoins').value) || 0)));
             const gems = Math.min(MAX, Math.max(0, Math.floor(Number($('adminGems').value) || 0)));
 
-            if (coins <= 0 && gems <= 0) {
-                adminMessage('Вкажи кількість монет або кристалів!', false);
+            const potStr = Math.max(0, Math.floor(Number($('adminPotStrength').value) || 0));
+            const potWlt = Math.max(0, Math.floor(Number($('adminPotWealth').value) || 0));
+            const potMin = Math.max(0, Math.floor(Number($('adminPotMinions').value) || 0));
+
+            if (coins <= 0 && gems <= 0 && potStr <= 0 && potWlt <= 0 && potMin <= 0) {
+                adminMessage('Вкажи кількість ресурсів або зіль!', false);
                 return;
             }
 
-            // Собі
             if (!target || target.toLowerCase() === state.currentUser.toLowerCase()) {
                 state.coins += coins;
                 state.gems += gems;
+                state.potions.strength += potStr;
+                state.potions.wealth += potWlt;
+                state.potions.minions += potMin;
                 audio.playBuySound();
                 updateUI();
-                adminMessage(`Видано собі: +${coins.toLocaleString()} 🪙 +${gems.toLocaleString()} 💎`, true);
+                adminMessage(`Видано собі ресурсів та зіль!`, true);
                 return;
             }
 
-            // Іншому гравцю: кладемо «подарунок», гравець забере його сам
             const giftId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-            const gift = { coins: coins, gems: gems, from: state.currentUser };
+            const gift = { 
+                coins: coins, 
+                gems: gems, 
+                potions: { strength: potStr, wealth: potWlt, minions: potMin },
+                from: state.currentUser 
+            };
             try {
                 if (cloudOn()) {
                     await cloudPut(`gifts/${nickKey(target)}/${giftId}`, gift);
@@ -886,14 +1041,13 @@
                     all[k][giftId] = gift;
                     localStorage.setItem('vivaclicker_gifts', JSON.stringify(all));
                 }
-                adminMessage(`Надіслано ${target}: +${coins.toLocaleString()} 🪙 +${gems.toLocaleString()} 💎`, true);
+                adminMessage(`Надіслано для ${target}!`, true);
             } catch (e) {
                 adminMessage('Не вдалося надіслати. Перевір інтернет.', false);
             }
         }
 
-        /* --- ADMIN: обнулення --- */
-        const RESET_LABELS = { coins: 'монети', gems: 'кристали', ban: 'бан і штрафи', all: 'ВЕСЬ ПРОГРЕС' };
+        const RESET_LABELS = { coins: 'монети', gems: 'кристали', potions: 'зілля', ban: 'бан і штрафи', all: 'ВЕСЬ ПРОГРЕС' };
 
         function applyReset(kind) {
             if (kind === 'coins') {
@@ -901,6 +1055,9 @@
             } else if (kind === 'gems') {
                 state.gems = 0;
                 state.gemClickProgress = 0;
+            } else if (kind === 'potions') {
+                state.potions = { strength: 0, wealth: 0, minions: 0 };
+                state.potionTimers = { strength: 0, wealth: 0, minions: 0 };
             } else if (kind === 'ban') {
                 stopBan();
                 state.banCount = 0;
@@ -941,13 +1098,12 @@
                     all[k][giftId] = gift;
                     localStorage.setItem('vivaclicker_gifts', JSON.stringify(all));
                 }
-                adminMessage(`Обнулення для ${target}: ${RESET_LABELS[kind]} (застосується, коли гравець онлайн)`, true);
+                adminMessage(`Обнулення для ${target}: ${RESET_LABELS[kind]}`, true);
             } catch (e) {
                 adminMessage('Не вдалося надіслати. Перевір інтернет.', false);
             }
         }
 
-        // Гравець забирає подарунки від адміна (при вході і кожні 20 с)
         async function claimGifts() {
             if (!state.currentUser || !state.loaded) return;
             const k = nickKey(state.currentUser);
@@ -962,12 +1118,11 @@
             } catch (e) { return; }
             if (!gifts) return;
 
-            let totalCoins = 0, totalGems = 0, resetDone = false;
+            let totalCoins = 0, totalGems = 0, resetDone = false, potGot = false;
             for (const id of Object.keys(gifts).sort()) {
                 const g = gifts[id] || {};
                 try {
                     if (cloudOn()) {
-                        // Спершу видаляємо, щоб подарунок не видався двічі
                         await cloudPut(`gifts/${k}/${id}`, null);
                     } else {
                         const all = JSON.parse(localStorage.getItem('vivaclicker_gifts') || '{}');
@@ -985,18 +1140,23 @@
                     state.gems += gm;
                     totalCoins += c;
                     totalGems += gm;
+                    if (g.potions) {
+                        state.potions.strength += (g.potions.strength || 0);
+                        state.potions.wealth += (g.potions.wealth || 0);
+                        state.potions.minions += (g.potions.minions || 0);
+                        potGot = true;
+                    }
                 }
             }
 
-            if (resetDone || totalCoins > 0 || totalGems > 0) {
+            if (resetDone || totalCoins > 0 || totalGems > 0 || potGot) {
                 audio.playBuySound();
                 updateUI();
-                setStatus(resetDone ? '⚠️ Адмін обнулив дані' : `🎁 +${totalCoins.toLocaleString()}🪙 +${totalGems.toLocaleString()}💎`);
+                setStatus(resetDone ? '⚠️ Обнулено адміном' : `🎁 Отримано подарунки від адміна!`);
                 saveGameData();
             }
         }
 
-        /* --- LEADERBOARD --- */
         async function pushLeaderboard() {
             if (!state.currentUser) return;
             const entry = {
@@ -1013,7 +1173,7 @@
                     lb[state.currentUser] = entry;
                     localStorage.setItem('vivaclicker_leaderboard', JSON.stringify(lb));
                 }
-            } catch (e) { /* без зв'язку — пропускаємо */ }
+            } catch (e) { }
         }
 
         async function openLeaderboardModal() {
@@ -1063,7 +1223,6 @@
             });
         }
 
-        /* --- WEB AUDIO SYNTHESIZER --- */
         class RetroAudio {
             constructor() { this.ctx = null; }
             init() {
@@ -1115,7 +1274,6 @@
         }
         const audio = new RetroAudio();
 
-        /* --- PIXEL CANVAS BLOCK RENDERER --- */
         const canvas = $('blockCanvas');
         const ctx = canvas.getContext('2d');
 
@@ -1130,12 +1288,10 @@
                 ctx.fillStyle = '#9E9E9E'; ctx.fillRect(0, 0, 16, 16);
                 ctx.fillStyle = '#616161'; ctx.fillRect(3, 4, 4, 4); ctx.fillRect(9, 2, 5, 3);
             } else if (level < 15) {
-                // Залізна руда (рівні 10-14)
                 ctx.fillStyle = '#757575'; ctx.fillRect(0, 0, 16, 16);
                 ctx.fillStyle = '#424242'; ctx.fillRect(2, 3, 12, 10);
                 ctx.fillStyle = '#D7CCC8'; ctx.fillRect(3, 4, 3, 2);
             } else {
-                // Золота руда (15-19) або діамантова (20+): камінь з вкрапленнями
                 const diamond = level >= 20;
                 ctx.fillStyle = '#6E6E6E'; ctx.fillRect(0, 0, 16, 16);
                 ctx.fillStyle = '#4A4A4A'; ctx.fillRect(1, 1, 14, 1); ctx.fillRect(1, 14, 14, 1);
@@ -1149,37 +1305,65 @@
             }
         }
 
-        /* --- STAT CALCULATIONS --- */
+        /* --- STAT CALCULATIONS WITH PETS & POTIONS --- */
         function getClickDamage() {
             let dmg = 1 + state.shovelLevel;
             dmg += state.silverPickaxeLevel * 5;
             dmg += state.ironPickaxeLevel * 20;
             dmg += state.goldPickaxeLevel * 35;
-            return dmg;
+            
+            // Питомец Заєць дає x1.5 урон
+            if (state.equippedPet === 'rabbit') {
+                dmg *= 1.5;
+            }
+
+            if (state.potionTimers.strength > 0) {
+                dmg *= 2;
+            }
+            return Math.floor(dmg);
+        }
+
+        function getAutoDps() {
+            let dps = state.minerLevel + (state.coolMinerLevel * 10) + (state.ironMinerLevel * 25) + (state.goldMinerLevel * 400);
+            
+            // Питомец Пташка дає x2 урон міньйонів
+            if (state.equippedPet === 'bird') {
+                dps *= 2;
+            }
+
+            if (state.potionTimers.minions > 0) {
+                dps *= 2;
+            }
+            return Math.floor(dps);
         }
 
         function getShovelCost() { return Math.floor(30 * Math.pow(2, state.shovelLevel)); }
         function getHeavyBlockCost() { return Math.floor(20 * Math.pow(2, state.heavyBlockLevel - 1)); }
         function getMinerCost() { return Math.floor(10 * Math.pow(1.5, state.minerLevel)); }
-        function getSilverCost() { return 200 * Math.pow(2, state.silverPickaxeLevel); }
-        function getBusinessmanCost() { return 200 * Math.pow(2, state.businessmanLevel); }
-        function getCoolMinerCost() { return 200 * Math.pow(2, state.coolMinerLevel); }
-        function getIronPickaxeCost() { return 1000 * Math.pow(2, state.ironPickaxeLevel); }
-        function getIronMinerCost() { return 1000 * Math.pow(2, state.ironMinerLevel); }
-        function getBitcoinCost() { return 2500 * Math.pow(2, state.bitcoinLevel); }
-        function getGoldPickaxeCost() { return 5000 * Math.pow(2, state.goldPickaxeLevel); }
-        function getPassiveCoins() { return (state.businessmanLevel * 5) + (state.bitcoinLevel * 50); }
-        function getAutoDps() { return state.minerLevel + (state.coolMinerLevel * 10) + (state.ironMinerLevel * 25); }
+        function getSilverCost() { return Math.floor(200 * Math.pow(2, state.silverPickaxeLevel)); }
+        function getBusinessmanCost() { return Math.floor(200 * Math.pow(2, state.businessmanLevel)); }
+        function getCoolMinerCost() { return Math.floor(200 * Math.pow(2, state.coolMinerLevel)); }
+        function getIronPickaxeCost() { return Math.floor(1000 * Math.pow(2, state.ironPickaxeLevel)); }
+        function getIronMinerCost() { return Math.floor(1000 * Math.pow(2, state.ironMinerLevel)); }
+        function getBitcoinCost() { return Math.floor(2500 * Math.pow(2, state.bitcoinLevel)); }
+        function getApartmentCost() { return Math.floor(10000 * Math.pow(3, state.apartmentLevel)); }
+        function getGoldPickaxeCost() { return Math.floor(5000 * Math.pow(2, state.goldPickaxeLevel)); }
+        function getGoldMinerCost() { return Math.floor(5000 * Math.pow(1.5, state.goldMinerLevel)); }
 
-        /* --- SHOP: таблиця товарів, які відкриваються від рівня Важкого Блоку --- */
+        function getPassiveCoins() { 
+            return (state.businessmanLevel * 5) + (state.bitcoinLevel * 50) + (state.apartmentLevel * 250); 
+        }
+
         const TIERED_ITEMS = [
-            { key: 'silverPickaxeLevel', row: 'silverPickaxeRow', btn: 'btnBuySilver',      cost: 'silverCostText',      status: 'silverPickaxeStatus', lvl: 'silverLvlText',      max: 5, req: 5,  price: getSilverCost },
-            { key: 'businessmanLevel',   row: 'businessmanRow',   btn: 'btnBuyBusinessman', cost: 'businessmanCostText', status: 'businessmanStatus',   lvl: 'businessmanLvlText', max: 5, req: 5,  price: getBusinessmanCost },
-            { key: 'coolMinerLevel',     row: 'coolMinerRow',     btn: 'btnBuyCoolMiner',   cost: 'coolMinerCostText',   status: 'coolMinerStatus',     lvl: 'coolMinerLvlText',   max: 5, req: 5,  price: getCoolMinerCost },
-            { key: 'ironPickaxeLevel',   row: 'ironPickaxeRow',   btn: 'btnBuyIronPickaxe', cost: 'ironPickaxeCostText', status: 'ironPickaxeStatus',   lvl: 'ironPickaxeLvlText', max: 5, req: 10, price: getIronPickaxeCost },
-            { key: 'ironMinerLevel',     row: 'ironMinerRow',     btn: 'btnBuyIronMiner',   cost: 'ironMinerCostText',   status: 'ironMinerStatus',     lvl: 'ironMinerLvlText',   max: 5, req: 10, price: getIronMinerCost },
-            { key: 'bitcoinLevel',       row: 'bitcoinRow',       btn: 'btnBuyBitcoin',     cost: 'bitcoinCostText',     status: 'bitcoinStatus',       lvl: 'bitcoinLvlText',     max: 5, req: 10, price: getBitcoinCost },
-            { key: 'goldPickaxeLevel',   row: 'goldPickaxeRow',   btn: 'btnBuyGoldPickaxe', cost: 'goldPickaxeCostText', status: 'goldPickaxeStatus',   lvl: 'goldPickaxeLvlText', max: 5, req: 15, price: getGoldPickaxeCost }
+            { key: 'silverPickaxeLevel', row: 'silverPickaxeRow', btn: 'btnBuySilver',      cost: 'silverCostText',      status: 'silverPickaxeStatus', lvl: 'silverLvlText',      max: 10, req: 5,  price: getSilverCost },
+            { key: 'businessmanLevel',   row: 'businessmanRow',   btn: 'btnBuyBusinessman', cost: 'businessmanCostText', status: 'businessmanStatus',   lvl: 'businessmanLvlText', max: 5,  req: 5,  price: getBusinessmanCost },
+            { key: 'coolMinerLevel',     row: 'coolMinerRow',     btn: 'btnBuyCoolMiner',   cost: 'coolMinerCostText',   status: 'coolMinerStatus',     lvl: 'coolMinerLvlText',   max: 5,  req: 5,  price: getCoolMinerCost },
+            { key: 'ironPickaxeLevel',   row: 'ironPickaxeRow',   btn: 'btnBuyIronPickaxe', cost: 'ironPickaxeCostText', status: 'ironPickaxeStatus',   lvl: 'ironPickaxeLvlText', max: 5,  req: 10, price: getIronPickaxeCost },
+            { key: 'ironMinerLevel',     row: 'ironMinerRow',     btn: 'btnBuyIronMiner',   cost: 'ironMinerCostText',   status: 'ironMinerStatus',     lvl: 'ironMinerLvlText',   max: 5,  req: 10, price: getIronMinerCost },
+            { key: 'bitcoinLevel',       row: 'bitcoinRow',       btn: 'btnBuyBitcoin',     cost: 'bitcoinCostText',     status: 'bitcoinStatus',       lvl: 'bitcoinLvlText',     max: 5,  req: 10, price: getBitcoinCost },
+            { key: 'apartmentLevel',     row: 'apartmentRow',     btn: 'btnBuyApartment',   cost: 'apartmentCostText',   status: 'apartmentStatus',     lvl: 'apartmentLvlText',   max: 3,  req: 10, price: getApartmentCost },
+            { key: 'goldPickaxeLevel',   row: 'goldPickaxeRow',   btn: 'btnBuyGoldPickaxe', cost: 'goldPickaxeCostText', status: 'goldPickaxeStatus',   lvl: 'goldPickaxeLvlText', max: 5,  req: 15, price: getGoldPickaxeCost },
+            { key: 'goldMinerLevel',     row: 'goldMinerRow',     btn: 'btnBuyGoldMiner',   cost: 'goldMinerCostText',   status: 'goldMinerStatus',     lvl: 'goldMinerLvlText',   max: 3,  req: 15, price: getGoldMinerCost }
         ];
 
         function shopNotice(text) {
@@ -1206,7 +1390,85 @@
             });
         }
 
-        /* --- UI UPDATES --- */
+        /* --- PETS SYSTEM LOGIC --- */
+        function buyPet(petId) {
+            audio.init();
+            if (!state.loaded) return;
+            if (state.petsOwned[petId]) return;
+
+            const cost = PET_CONFIG[petId].price;
+            if (state.gems < cost) {
+                return;
+            }
+
+            state.gems -= cost;
+            state.petsOwned[petId] = true;
+            audio.playBuySound();
+            updatePetsUI();
+            updateUI();
+            saveGameData();
+        }
+
+        function equipPet(petId) {
+            audio.init();
+            if (state.equippedPet === petId) {
+                state.equippedPet = null; // Зняти
+            } else if (state.petsOwned[petId]) {
+                state.equippedPet = petId; // Одягнути
+            }
+            audio.playBuySound();
+            updatePetsUI();
+            updateUI();
+            saveGameData();
+        }
+
+        function updatePetsUI() {
+            ['rabbit', 'wolf', 'bird'].forEach(petId => {
+                const container = $(petId + 'ActionContainer');
+                if (!container) return;
+                const owned = state.petsOwned[petId];
+                const equipped = state.equippedPet === petId;
+                const cost = PET_CONFIG[petId].price;
+
+                if (!owned) {
+                    container.innerHTML = `<button onclick="buyPet('${petId}')" class="pixel-btn pixel-btn-gold px-2 py-1 text-white text-[8px]">КУПИТИ (${cost}💎)</button>`;
+                } else {
+                    if (equipped) {
+                        container.innerHTML = `<button onclick="equipPet('${petId}')" class="pixel-btn pixel-btn-red px-2 py-1 text-white text-[8px]">ЗНЯТИ</button>`;
+                    } else {
+                        container.innerHTML = `<button onclick="equipPet('${petId}')" class="pixel-btn pixel-btn-blue px-2 py-1 text-white text-[8px]">ЕКІПИРУВАТИ</button>`;
+                    }
+                }
+            });
+
+            // Відображення питомця на блоці
+            const petOverlay = $('activePetOverlay');
+            if (state.equippedPet && PET_CONFIG[state.equippedPet]) {
+                petOverlay.textContent = PET_CONFIG[state.equippedPet].emoji;
+                petOverlay.classList.remove('hidden');
+            } else {
+                petOverlay.classList.add('hidden');
+            }
+        }
+
+        /* --- POTIONS MECHANICS --- */
+        function usePotion(type) {
+            audio.init();
+            if (!state.loaded) return;
+            if ((state.potions[type] || 0) <= 0) return;
+            state.potions[type]--;
+            state.potionTimers[type] = (state.potionTimers[type] || 0) + 300;
+            audio.playBuySound();
+            updateUI();
+            saveGameData();
+        }
+
+        function formatTime(sec) {
+            const m = Math.floor(sec / 60);
+            const s = sec % 60;
+            return `${m}:${s < 10 ? '0' : ''}${s}`;
+        }
+
         function updateUI() {
             $('coinsDisplay').textContent = state.coins.toLocaleString();
             $('gemsDisplay').textContent = state.gems.toLocaleString();
@@ -1220,9 +1482,28 @@
             $('hpFill').style.width = `${hpPct}%`;
             $('hpText').textContent = `${Math.ceil(state.currentHp)} / ${state.maxHp} HP`;
 
-            $('clickDmgText').textContent = getClickDamage();
-            $('dpsText').textContent = getAutoDps();
-            $('incomeText').textContent = getPassiveCoins();
+            $('clickDmgText').textContent = getClickDamage().toLocaleString();
+            $('dpsText').textContent = getAutoDps().toLocaleString();
+            $('incomeText').textContent = getPassiveCoins().toLocaleString();
+
+            $('potStrengthCount').textContent = state.potions.strength || 0;
+            $('potWealthCount').textContent = state.potions.wealth || 0;
+            $('potMinionsCount').textContent = state.potions.minions || 0;
+
+            $('potStrengthTimer').textContent = state.potionTimers.strength > 0 ? `АКТИВНО: ${formatTime(state.potionTimers.strength)}` : '';
+            $('potWealthTimer').textContent = state.potionTimers.wealth > 0 ? `АКТИВНО: ${formatTime(state.potionTimers.wealth)}` : '';
+            $('potMinionsTimer').textContent = state.potionTimers.minions > 0 ? `АКТИВНО: ${formatTime(state.potionTimers.minions)}` : '';
+
+            $('btnUseStrength').classList.toggle('pixel-btn-disabled', (state.potions.strength || 0) <= 0);
+            $('btnUseWealth').classList.toggle('pixel-btn-disabled', (state.potions.wealth || 0) <= 0);
+            $('btnUseMinions').classList.toggle('pixel-btn-disabled', (state.potions.minions || 0) <= 0);
+
+            const activeList = [];
+            if (state.potionTimers.strength > 0) activeList.push(`⚔️x2(${formatTime(state.potionTimers.strength)})`);
+            if (state.potionTimers.wealth > 0) activeList.push(`🪙x2(${formatTime(state.potionTimers.wealth)})`);
+            if (state.potionTimers.minions > 0) activeList.push(`🤖x2(${formatTime(state.potionTimers.minions)})`);
+            if (state.equippedPet) activeList.push(`🐾(${PET_CONFIG[state.equippedPet].name})`);
+            $('activePotionsBar').innerHTML = activeList.length ? 'БОНУСИ: ' + activeList.join(' ') : '';
 
             $('shovelLvlText').textContent = state.shovelLevel;
             const shovelCost = getShovelCost();
@@ -1250,11 +1531,11 @@
             }
 
             updateTieredItems();
+            updatePetsUI();
             $('adminBtn').classList.toggle('hidden', state.currentUser !== ADMIN_NICK);
             renderBlock();
         }
 
-        /* --- DAMAGE FLOATING TEXT EFFECT --- */
         function spawnDamageText(x, y, amount) {
             const container = $('canvasContainer');
             const el = document.createElement('div');
@@ -1267,7 +1548,6 @@
             setTimeout(() => el.remove(), 800);
         }
 
-        /* --- GAME MECHANICS --- */
         function applyDamage(amount, x = null, y = null) {
             if (state.isBanned) return;
             state.currentHp -= amount;
@@ -1275,7 +1555,17 @@
 
             if (state.currentHp <= 0) {
                 audio.playBreakSound();
-                const reward = Math.floor(state.baseCoinReward * Math.pow(2, state.heavyBlockLevel - 1));
+                let reward = Math.floor(state.baseCoinReward * Math.pow(2, state.heavyBlockLevel - 1));
+                
+                // Вовк дає x2 гроші
+                if (state.equippedPet === 'wolf') {
+                    reward *= 2;
+                }
+
+                if (state.potionTimers.wealth > 0) {
+                    reward *= 2;
+                }
+
                 state.coins += reward;
                 state.currentHp = state.maxHp;
             } else {
@@ -1288,8 +1578,6 @@
             audio.init();
             if (state.isBanned || !state.loaded) return;
 
-            // АНТИЧІТ
-            // 1) Синтетичні кліки (з консолі/скрипта), а не від справжнього дотику
             if (e && e.isTrusted === false) {
                 if (flagSuspicious(3)) return;
                 return;
@@ -1307,11 +1595,8 @@
             state.lastClickAt = now;
 
             let suspicious = false;
-
-            // 2) Занадто швидко для людини
             if (cps >= 20) suspicious = true;
 
-            // 3) Занадто рівний ритм (автоклікер б'є з однаковим інтервалом)
             if (state.clickIntervals.length >= 20) {
                 const iv = state.clickIntervals;
                 const mean = iv.reduce((a, b) => a + b, 0) / iv.length;
@@ -1338,7 +1623,6 @@
             applyDamage(getClickDamage(), clickX, clickY);
         }
 
-        // Додає підозру; повертає true, якщо видано бан
         function flagSuspicious(weight) {
             state.suspiciousCounter += weight;
             if (state.suspiciousCounter >= 5) {
@@ -1348,7 +1632,6 @@
             return false;
         }
 
-        // Тривалість бану росте з кожним порушенням: 10, 20, 40, ... до 600 сек
         function banDuration() {
             return Math.min(10 * Math.pow(2, state.banCount), 600);
         }
@@ -1361,7 +1644,6 @@
             $('banOverlay').classList.add('hidden');
         }
 
-        // Бан рахується за часом закінчення (banUntil), тому перезавантаження сторінки його не скидає
         function startBanCountdown() {
             const overlay = $('banOverlay');
             const timerEl = $('banTimer');
@@ -1398,9 +1680,6 @@
             saveGameData();
         }
 
-        /* --- SHOP ACTIONS --- */
-        // Загальна покупка: перевіряє рівень Важкого Блоку, максимум і монети
-        // та пише користувачу, ЧОМУ не вдалося купити.
         function buyTiered(key, max, req, costFn) {
             audio.init();
             if (!state.loaded) return;
@@ -1426,13 +1705,15 @@
 
         function buyShovel()         { buyTiered('shovelLevel', 5, 0, getShovelCost); }
         function buyMiner()          { buyTiered('minerLevel', 10, 0, getMinerCost); }
-        function buySilverPickaxe()  { buyTiered('silverPickaxeLevel', 5, 5, getSilverCost); }
+        function buySilverPickaxe()  { buyTiered('silverPickaxeLevel', 10, 5, getSilverCost); }
         function buyBusinessman()    { buyTiered('businessmanLevel', 5, 5, getBusinessmanCost); }
         function buyCoolMiner()      { buyTiered('coolMinerLevel', 5, 5, getCoolMinerCost); }
         function buyIronPickaxe()    { buyTiered('ironPickaxeLevel', 5, 10, getIronPickaxeCost); }
         function buyIronMiner()      { buyTiered('ironMinerLevel', 5, 10, getIronMinerCost); }
         function buyBitcoin()        { buyTiered('bitcoinLevel', 5, 10, getBitcoinCost); }
+        function buyApartment()      { buyTiered('apartmentLevel', 3, 10, getApartmentCost); }
         function buyGoldPickaxe()    { buyTiered('goldPickaxeLevel', 5, 15, getGoldPickaxeCost); }
+        function buyGoldMiner()      { buyTiered('goldMinerLevel', 3, 15, getGoldMinerCost); }
 
         function buyHeavyBlock() {
             audio.init();
@@ -1451,7 +1732,6 @@
             updateUI();
         }
 
-        /* --- BACKGROUND SHOP --- */
         function renderBackgroundsList() {
             const listContainer = $('backgroundsList');
             listContainer.innerHTML = '';
@@ -1492,14 +1772,12 @@
             }
         }
 
-        /* --- PROMO CODES --- */
         function applyPromoCode() {
             audio.init();
             const input = $('promoInput');
             const msg = $('promoMessage');
             const typed = input.value.trim().toLowerCase();
 
-            // Не залежимо від регістру
             const code = Object.keys(PROMO_CODES).find(k => k.toLowerCase() === typed);
 
             if (!code) {
@@ -1532,21 +1810,29 @@
             $(id).classList.remove('hidden');
             if (id === 'backgroundsModal') renderBackgroundsList();
             if (id === 'shopModal') { shopNotice(''); updateUI(); }
+            if (id === 'potionsModal') updateUI();
+            if (id === 'petsModal') updatePetsUI();
         }
 
         function closeModal(id) { $(id).classList.add('hidden'); }
 
-        /* --- TIMERS & AUTO SAVING --- */
         setInterval(() => {
             if (state.isBanned || !state.loaded) return;
+
+            ['strength', 'wealth', 'minions'].forEach(p => {
+                if (state.potionTimers[p] > 0) {
+                    state.potionTimers[p]--;
+                }
+            });
+
             if (getAutoDps() > 0) applyDamage(getAutoDps());
             if (getPassiveCoins() > 0) {
                 state.coins += getPassiveCoins();
-                updateUI();
             }
+
+            updateUI();
         }, 1000);
 
-        // Автозбереження (і оновлення таблиці лідерів) кожні 20 секунд
         setInterval(() => {
             saveGameData();
             claimGifts();
